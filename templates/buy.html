@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Auctions | Bidauc.in</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css') }}">
+</head>
+<body class="buy-page">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">Bid<span>auc</span>.in</a>
+            <div class="nav-right">
+                <a href="/dashboard" class="btn-create">+ Create Auction</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Search Section -->
+        <header class="explore-hero">
+            <div class="hero-content">
+                <h1>Find your next <span>treasure</span></h1>
+                <p>Browse thousands of active auctions from verified sellers.</p>
+                <div class="search-box">
+                    <input type="text" placeholder="Search for items, brands, or categories...">
+                    <button>Search</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Category Quick Links -->
+        <!-- Category Quick Links -->
+  <section class="category-strip">
+    <a href="/buy?cat=All" 
+       class="cat-pill {{ 'active' if current_category == 'All' or not current_category else '' }}">All Items</a>
+    
+    <a href="/buy?cat=Vehicle" 
+       class="cat-pill {{ 'active' if current_category == 'Vehicle' else '' }}">🚗 Vehicles</a>
+    
+    <a href="/buy?cat=Electronics" 
+       class="cat-pill {{ 'active' if current_category == 'Electronics' else '' }}">💻 Electronics</a>
+    
+    <a href="/buy?cat=Jewellery" 
+       class="cat-pill {{ 'active' if current_category == 'Jewellery' else '' }}">💎 Jewellery</a>
+    
+    <a href="/buy?cat=Art" 
+       class="cat-pill {{ 'active' if current_category == 'Art' else '' }}">🎨 Art</a>
+    
+    <a href="/buy?cat=Property" 
+       class="cat-pill {{ 'active' if current_category == 'Property' else '' }}">🏠 Real Estate</a>
+ </section>
+
+        <!-- Auction Grid -->
+        <main class="auction-section">
+            <div class="section-header">
+                <h2>Active Auctions</h2>
+                <span class="results-count">Showing {{ auctions|length }} items</span>
+            </div>
+
+            <div class="auction-grid">
+                {% for item in auctions %}
+                <div class="product-card">
+                    <div class="image-wrap">
+                        <!-- item[3] is Image -->
+                        <img src="{{ url_for('static', filename='images/' + item[3]) }}" alt="{{ item[1] }}">
+                        <div class="status-badge live">Live</div>
+                    </div>
+                    <div class="card-content">
+                        <!-- item[1] is Title -->
+                        <h3>{{ item[1] }}</h3>
+                        <div class="meta-row">
+                            <div class="meta-group">
+                                <span class="label">Current Bid</span>
+                                <!-- item[5] is Current Bid -->
+                                <span class="price">₹{{ "{:,.0f}".format(item[5]) }}</span>
+                            </div>
+                            <div class="meta-group align-right">
+                                <span class="label">Time Left</span>
+                                <span class="timer">Live Now</span>
+                            </div>
+                        </div>
+                        <!-- item[0] is ID -->
+                        <a href="/auction/{{ item[0] }}" class="btn-bid">View & Place Bid</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

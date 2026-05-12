@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Error — BidSurge</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--light)">
+    <div style="text-align:center;padding:3rem;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);max-width:420px">
+      <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;margin-bottom:0.75rem;color:#2B2D42">Bid Error</h2>
+      <p style="color:#8D99AE;margin-bottom:1.5rem">{{ message }}</p>
+      <a href="javascript:history.back()" 
+         style="display:inline-block;padding:.65rem 1.5rem;background:#D90429;color:#fff;border-radius:10px;font-weight:600;text-decoration:none">
+        ← Go Back
+      </a>
+    </div>
+  </div>
+</body>
+</html>

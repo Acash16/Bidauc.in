@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/wishlist.css') }}">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+
+    <a href="/" class="logo">
+        Bid<span class="highlight">auc</span>.in
+    </a>
+
+    <div class="nav-right">
+
+        <a href="/" class="back-home">
+            <i class="fas fa-arrow-left"></i> Home
+        </a>
+
+    </div>
+
+</div>
+
+<!-- TITLE -->
+<div class="wishlist-header">
+    <h1>My Wishlist ❤️</h1>
+    <p>Your saved auction items</p>
+</div>
+
+<!-- PRODUCTS -->
+<div class="wishlist-grid">
+
+{% for item in wishlist_items %}
+
+    <div class="wishlist-card">
+
+        <div class="wishlist-image">
+             <img src="{{ url_for('static', filename='images/' + item[3]) }}" alt="{{ item[1] }}">
+        </div>
+
+        <div class="wishlist-content">
+
+            <h3>{{ item[1] }}</h3>
+
+            <p class="wishlist-price">
+                 ₹{{ "%.2f"|format(item[5]) }}
+             </p>
+
+            <a href="/auction/{{ item[0] }}" class="wishlist-btn"></a>
+                View Auction
+            </a>
+
+        </div>
+
+    </div>
+
+{% endfor %}
+
+</div>
+
+</body>
+</html>

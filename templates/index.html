@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Bidauc</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+<a href="/" class="logo">
+  Bid<span class="highlight">auc</span>.in
+</a>
+
+<div class="nav-actions">
+   <a href="/create_auction"><i class="fas fa-tag"></i> SELL</a>
+   <a href="/buy"><i class="fas fa-shopping-cart"></i> BUY</a>
+</div>
+
+<a href="/create_auction" class="create-btn">Create Auction</a>
+
+<form action="/search" method="GET" class="search-bar">
+  <i class="fas fa-search search-icon"></i>
+  <input type="text" name="query" placeholder="Search auctions">
+</form>
+
+<div class="nav-right">
+
+  <!-- PROFILE DROPDOWN -->
+  <div class="profile-menu" onclick="toggleMenu(event)">
+    <i class="fas fa-user"></i>
+    <span>Profile</span>
+
+    <div class="dropdown">
+      {% if user %}
+      <p class="welcome">Welcome {{ session['user_name'] }}</p>
+      <p class="sub-text">To access account and manage orders</p>
+      {% else %}
+      <div class="auth-buttons">
+        <a href="/login" class="btn login-btn">LOGIN</a>
+        <a href="/signup" class="btn signup-btn">SIGNUP</a>
+      </div>
+      {% endif %}
+      <hr>
+      
+      <ul>
+         <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/my_wishlist">Wishlist</a></li>
+        <li><a href="javascript:void(0)" onclick="openReviewModal()"><i class="fas fa-star" style="margin-right:8px; color: #f39c12;"></i> Give Feedback</a></li>
+        <li><a href="#footer-contact">Contact Us</a></li>
+        <li><a href="/logout">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- WISHLIST -->
+   <a href="/my_wishlist" class="icon wishlist-nav">
+    <i class="far fa-heart"></i>
+    <span>Wishlist</span>
+</a>
+  
+</div>
+
+
+</div>
+
+<!-- HERO SLIDER -->
+<div class="hero-slider">
+  <!-- Slide 1 -->
+  <div class="slide active" style="background: linear-gradient(135deg, #c0392b, #e04e3e, #ff8a80);">
+    <div class="slide-content">
+      <h1>You want to bid?</h1>
+      <p>We got you 😁</p>
+      <div class="hero-btns">
+        <a href="/" class="hero-buy-btn"><i class="fas fa-shopping-cart"></i> Buy Now</a>
+        <a href="/create_auction" class="hero-sell-btn"><i class="fas fa-tag"></i> Sell Now</a>
+      </div>
+    </div>
+    <div class="slide-image">
+      <img src="/static/images/images.webp" alt="Sports Car">
+    </div>
+  </div>
+
+  <!-- Slide 2 -->
+  <div class="slide" style="background: linear-gradient(135deg, #1a3a6b, #2e6db4, #74b9ff);">
+    <div class="slide-content">
+      <h1>Top Electronics Deals</h1>
+      <p>Grab the latest gadgets at auction prices.</p>
+      <div class="hero-btns">
+        <a href="/" class="hero-buy-btn"><i class="fas fa-shopping-cart"></i> Buy Now</a>
+        <a href="/create_auction" class="hero-sell-btn"><i class="fas fa-tag"></i> Sell Now</a>
+      </div>
+    </div>
+    <div class="slide-image">
+      <img src="/static/images/download.webp" alt="Electronics">
+    </div>
+  </div>
+
+  <!-- Slide 3 -->
+  <div class="slide" style="background: linear-gradient(135deg, #1b5e20, #388e3c, #81c784);">
+    <div class="slide-content">
+      <h1>Premium Properties</h1>
+      <p>Bid on your dream home today.</p>
+      <div class="hero-btns">
+        <a href="/" class="hero-buy-btn"><i class="fas fa-shopping-cart"></i> Buy Now</a>
+        <a href="/create_auction" class="hero-sell-btn"><i class="fas fa-tag"></i> Sell Now</a>
+      </div>
+    </div>
+    <div class="slide-image">
+      <img src="/static/images/antique.jpg" alt="Property">
+    </div>
+  </div>
+
+  <!-- Navigation Arrows - ONLY ONCE -->
+  <button class="slider-btn left-btn">❮</button>
+  <button class="slider-btn right-btn">❯</button>
+
+  <!-- Dots -->
+  <div class="slider-dots">
+    <span class="dot active" onclick="goToSlide(0)"></span>
+    <span class="dot" onclick="goToSlide(1)"></span>
+    <span class="dot" onclick="goToSlide(2)"></span>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filters">
+  <!-- All -->
+  <a href="/?cat=All" class="filter-btn {{ 'active' if current_category == 'All' or not current_category }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    All
+  </a>
+  
+  <!-- Cars -->
+  <a href="/?cat=Vehicle" class="filter-btn {{ 'active' if current_category == 'Vehicle' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/><path d="M5 12h14"/></svg>
+    Cars
+  </a>
+  
+  <!-- Electronics -->
+  <a href="/?cat=Electronics" class="filter-btn {{ 'active' if current_category == 'Electronics' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    Electronics
+  </a>
+  
+  <!-- Properties -->
+  <a href="/?cat=Property" class="filter-btn {{ 'active' if current_category == 'Property' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M9 21V9l3-6 3 6v12M9 12h6"/></svg>
+    Properties
+  </a>
+
+  <!-- Technology -->
+  <a href="/?cat=Technology" class="filter-btn {{ 'active' if current_category == 'Technology' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    Technology
+  </a>
+
+  <!-- Antique -->
+  <a href="/?cat=Antique" class="filter-btn {{ 'active' if current_category == 'Antique' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5c0 5-5 11-5 11S7 12 7 7a5 5 0 0 1 5-5z"/><circle cx="12" cy="7" r="2"/></svg>
+    Antique
+  </a>
+
+  <!-- Tender -->
+  <a href="/?cat=Tender" class="filter-btn {{ 'active' if current_category == 'Tender' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+    Tender
+  </a>
+</div>
+
+<!-- LIVE TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-label">🔴 LIVE</div>
+  <div class="ticker-track">
+    <span>🚗 BMW M3 — Current Bid: <b>₹42,00,000</b></span>
+    <span>📱 iPhone 15 Pro Max — Current Bid: <b>₹88,000</b></span>
+    <span>🏠 3BHK Pune — Current Bid: <b>₹1.2Cr</b></span>
+    <span>⌚ Rolex Submariner — Current Bid: <b>₹6,50,000</b></span>
+    <span>💻 MacBook Pro M3 — Current Bid: <b>₹1,10,000</b></span>
+    <span>🚗 BMW M3 — Current Bid: <b>₹42,00,000</b></span>
+    <span>📱 iPhone 15 Pro Max — Current Bid: <b>₹88,000</b></span>
+    <span>🏠 3BHK Pune — Current Bid: <b>₹1.2Cr</b></span>
+    <span>⌚ Rolex Submariner — Current Bid: <b>₹6,50,000</b></span>
+    <span>💻 MacBook Pro M3 — Current Bid: <b>₹1,10,000</b></span>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <!-- Active Auctions -->
+  <div class="stat-card">
+    <div class="stat-num">
+        {{ stats.active_val }}<span>{{ stats.active_suffix }}+</span>
+    </div>
+    <p>Active Auctions</p>
+  </div>
+
+  <!-- Registered Bidders -->
+  <div class="stat-card">
+    <div class="stat-num">
+        {{ stats.user_val }}<span>{{ stats.user_suffix }}</span>
+    </div>
+    <p>Registered Bidders</p>
+  </div>
+
+  <!-- Total Bids Placed -->
+  <div class="stat-card">
+    <div class="stat-num">
+        ₹<span>{{ stats.bids_val }}{{ stats.bids_suffix }}</span>
+    </div>
+    <p>Total Bids Placed</p>
+  </div>
+
+  <!-- Satisfied Buyers (Usually remains a static high percentage) -->
+  <div class="stat-card">
+    <div class="stat-num">98<span>%</span></div>
+    <p>Satisfied Buyers</p>
+  </div>
+</div>
+
+<!-- DEBUG -->
+<p style="color:red; text-align:center; font-weight:bold;">
+  Total Auctions: {{ auctions|length }}
+</p>
+
+
+<!-- GRID SECTION -->
+<div class="grid-section">
+  {% for item in auctions %}
+  <div class="auction-card">
+    
+    <!-- This link wraps the image and title area -->
+    <a href="/auction/{{item.id}}" class="card-main-link">
+        <div class="card-image">
+          <span class="badge-hot">🔥 HOT</span>
+          <img src="{{ url_for('static', filename='images/' + item.image) }}">
+        </div>
+
+        <div class="card-details">
+          <div class="card-meta">
+            <span class="card-cat">{{ item.category }}</span>
+            <span class="bid-count">Active</span>
+          </div>
+          
+          <h3 class="card-title">{{ item.title }}</h3>
+
+          <div class="price-row">
+            <div class="current-price">
+              <small>Current Bid</small>
+              <p class="price-label-text">₹{{ "{:,.0f}".format(item.current_bid | float) }}</p>
+            </div>
+            <div class="time-left">
+              <small>Status</small>
+              <p class="timer-label-text">Live</p>
+            </div>
+          </div>
+        </div>
+    </a>
+
+    <!-- Footer buttons stay separate so they can have their own clicks -->
+    <div class="card-footer-btns" style="padding: 0 20px 20px 20px;">
+        <a href="/auction/{{item.id}}" class="btn-bid-primary">View Details & Bid</a>
+        
+        <a href="/wishlist/{{item.id}}" class="btn-wishlist-icon">
+            <i class="fas fa-heart"></i>
+        </a>
+
+        {% if session.get('user_id') == item.seller_id %}
+        <a href="/delete_auction/{{item.id}}" class="btn-delete-ghost" onclick="return confirm('Delete this?')">
+          <i class="fas fa-trash"></i>
+        </a>
+        {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+
+
+
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" >
+  <div class="section-tag">Simple Process</div>
+  <h2 class="section-title">How It Works</h2>
+  <p class="section-sub">Start bidding in under 2 minutes</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h4>Create Account</h4>
+      <p>Sign up free in seconds. No credit card needed to browse.</p>
+      <div class="step-arrow">›</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h4>Browse Auctions</h4>
+      <p>Filter by category, price, or time remaining.</p>
+      <div class="step-arrow">›</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h4>Place Your Bid</h4>
+      <p>Bid live or set a max bid and let the system bid for you.</p>
+      <div class="step-arrow">›</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h4>Win & Pay</h4>
+      <p>If you win, pay securely and get your item delivered.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- TESTIMONIALS SLIDER -->
+<section class="testimonials-section">
+  <div class="section-tag">Reviews</div>
+  <h2 class="section-title">What Bidders Say</h2>
+  <p class="section-sub">Trusted by thousands across India</p>
+  
+  <div class="slider-container">
+    <!-- Left Arrow -->
+    <button class="slide-nav prev" onclick="moveSlide(-1)">❮</button>
+
+    <div class="slider-viewport">
+      <div class="slider-track" id="testimonialTrack">
+        {% for r in reviews_list %}
+        <div class="tcard">
+          <div class="stars">{{ r.stars }}</div>
+          <p>"{{ r.comment }}"</p>
+          <div class="tuser">
+            <div class="tavatar">{{ r.initials }}</div>
+            <div>
+              <h5>{{ r.name }}</h5>
+              <span>Verified User</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right Arrow -->
+    <button class="slide-nav next" onclick="moveSlide(1)">❯</button>
+  </div>
+</section>
+<!-- NEWSLETTER -->
+
+<section class="newsletter-section">
+  <div class="newsletter-box">
+    <h2>Never Miss a Deal 🔔</h2>
+    <p>Get notified when new auctions go live in your favourite categories</p>
+    
+    <!-- Add form tags here -->
+    <form action="/subscribe" method="POST" class="newsletter-form">
+      <input type="email" name="email" placeholder="Enter your email address" required>
+      <button type="submit">Notify Me</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer" id="footer-contact">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <h3>Bid<span>auc</span>.in</h3>
+      <p>India's trusted auction platform for cars, electronics, properties and more.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Company</h5>
+      <a href="#">About Us</a>
+      <a href="#">Careers</a>
+      <a href="#">Press</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h5>Support</h5>
+      <a href="tel:+917888480449">+91 7888480449</a>
+      <a href="mailto:akash.connect60@gmail.com">akash.connect60@gmail.com</a>
+      <a href="https://github.com" target="Acash16">Github</a>
+      <a href="#">Seller Guide</a>
+    </div>
+
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Bidauc.in — All rights reserved</p>
+    <div class="socials">
+      <a href="#"><i class="fab fa-twitter"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-linkedin"></i></a>
+      <a href="#"><i class="fab fa-youtube"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='script/brain.js') }}"></script>
+<!-- REVIEW MODAL -->
+<div id="reviewModal" class="review-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeReviewModal()">&times;</span>
+        <h3>Share Your Experience </h3>
+        <p>How was your experience with BidVault?</p>
+        
+        <form action="/submit_review" method="POST">
+            <!-- Star Rating -->
+            <div class="star-rating">
+                <input type="radio" name="stars" id="star5" value="5" required><label for="star5">★</label>
+                <input type="radio" name="stars" id="star4" value="4"><label for="star4">★</label>
+                <input type="radio" name="stars" id="star3" value="3"><label for="star3">★</label>
+                <input type="radio" name="stars" id="star2" value="2"><label for="star2">★</label>
+                <input type="radio" name="stars" id="star1" value="1"><label for="star1">★</label>
+            </div>
+
+            <textarea name="message" placeholder="Tell us more (optional)..." rows="4"></textarea>
+            
+            <button type="submit" class="submit-review-btn">Submit Review</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

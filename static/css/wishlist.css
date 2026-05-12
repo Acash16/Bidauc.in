@@ -1,0 +1,153 @@
+/* =========================
+   WISHLIST PAGE
+========================= */
+
+/* NAVBAR */
+.navbar {
+  background: #2B2D42;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+}
+
+.highlight { color: #D90429; }
+
+.nav-right { display: flex; align-items: center; gap: 20px; }
+
+.back-home {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+
+.back-home:hover { color: #fff; }
+
+
+
+.wishlist-header{
+    text-align:center;
+    margin:50px 0 30px;
+}
+
+.wishlist-header h1{
+    font-size:42px;
+    color:#2B2D42;
+    margin-bottom:10px;
+}
+
+.wishlist-header p{
+    color:#8D99AE;
+    font-size:16px;
+}
+
+/* GRID */
+
+.wishlist-grid{
+    width:90%;
+    margin:auto;
+
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:28px;
+
+    padding-bottom:60px;
+}
+
+/* CARD */
+
+.wishlist-card{
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+
+    transition:0.3s ease;
+}
+
+.wishlist-card:hover{
+    transform:translateY(-6px);
+}
+
+/* IMAGE */
+
+.wishlist-image{
+    height:230px;
+    overflow:hidden;
+}
+
+.wishlist-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* CONTENT */
+
+.wishlist-content{
+    padding:22px;
+}
+
+.wishlist-content h3{
+    font-size:22px;
+    color:#2B2D42;
+    margin-bottom:12px;
+}
+
+/* PRICE */
+
+.wishlist-price{
+    color:#D90429;
+    font-size:24px;
+    font-weight:700;
+
+    margin-bottom:18px;
+}
+
+/* BUTTON */
+
+.wishlist-btn{
+    display:inline-block;
+
+    background:linear-gradient(135deg,#D90429,#EF233C);
+
+    color:#fff;
+    text-decoration:none;
+
+    padding:12px 22px;
+    border-radius:10px;
+
+    font-weight:600;
+
+    transition:0.3s ease;
+}
+
+.wishlist-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* HOME BUTTON */
+
+.back-home{
+    text-decoration:none;
+    color:#2B2D42;
+    font-weight:600;
+}

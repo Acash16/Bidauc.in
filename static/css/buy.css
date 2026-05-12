@@ -1,0 +1,278 @@
+:root {
+    --primary: #D90429;
+    --dark: #2B2D42;
+    --light-bg: #EDF2F4;
+    --white: #FFFFFF;
+    --gray: #8D99AE;
+    --accent-red: #EF233C;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial ; background-color: var(--light-bg); color: var(--dark); line-height: 1.6; }
+
+/* Navbar */
+/* NAVBAR */
+
+.navbar{
+
+    background:#2B2D42;
+
+    position:sticky;
+
+    top:0;
+
+    padding:0;
+
+    box-shadow:0 4px 14px rgba(0,0,0,0.08);
+
+}
+
+.nav-container{
+
+    max-width:1280px;
+
+    height:58px;
+
+    margin:auto;
+
+    padding:0 10px;
+    
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+}
+/* LOGO */
+
+.logo{
+
+    font-size: 30px;
+
+    font-weight: bold;
+
+    text-decoration:none;
+
+    color:#ffffff;
+
+    letter-spacing: 1px;
+
+    display:flex;
+
+    align-items:center;
+
+    line-height:1;
+
+}
+
+.logo span{
+
+    color:#D90429;
+
+}
+
+/* RIGHT SIDE */
+
+.nav-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:28px;
+
+}
+
+/* NAV LINKS */
+
+.nav-right a{
+
+    color:#ffffff;
+
+    text-decoration:none;
+
+    font-size:16px;
+
+    font-weight:500;
+
+    transition:0.2s ease;
+
+}
+
+.nav-right a:hover{
+
+    color:#EF233C;
+
+}
+
+/* CREATE BUTTON */
+
+.create-btn{
+    background:linear-gradient(135deg,#D90429,#EF233C);
+    color:#ffffff;
+
+    padding:12px 24px;
+    border:none;
+    border-radius:7px;
+
+    font-size:14px;
+    font-weight:bold;
+    text-decoration:none;
+
+    cursor:pointer;
+    transition:0.3s ease;
+
+    box-shadow:0 6px 18px rgba(217,4,41,0.25);
+}
+
+/* HOVER */
+/* This ensures the text stays white and the red gets a bit brighter on hover */
+.btn-create:hover {
+    background-color: var(--accent) !important; /* Brighter red */
+    color: #ffffff !important;               /* Force white text */
+    text-decoration: none;                   /* Remove underline if any */
+    box-shadow: 0 4px 12px rgba(217, 4, 41, 0.3); /* Optional: add a nice glow */
+    transform: translateY(-1px);             /* Optional: slight lift effect */
+}
+
+/* Also ensure it looks correct even if it was already clicked */
+.btn-create:visited, 
+.btn-create:active {
+    color: #ffffff !important;
+}
+.btn-create { background: #D90429;  color:#2B2D42;padding: 8px 18px; border-radius: 8px; font-weight: 600 !important; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
+/* Hero Section */
+.explore-hero {
+    background: linear-gradient(135deg, #2B2D42 0%, #1a1a2e 100%);
+    border-radius: 24px;
+    padding: 60px 40px;
+    color: white;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.hero-content h1 { font-family: 'Syne'; font-size: 2.8rem; margin-bottom: 10px; }
+.hero-content h1 span { color: var(--primary); }
+.hero-content p { color: var(--gray); font-size: 1.1rem; margin-bottom: 30px; }
+
+.search-box {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+}
+.search-box input { flex: 1; border: none; padding: 12px 20px; outline: none; font-size: 1rem; border-radius: 8px; }
+.search-box button { background: var(--primary); color: white; border: none; padding: 0 30px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+.search-box button:hover { background: var(--accent-red); }
+
+/* Category Filter */
+/* ── Updated Category Strip ── */
+.category-strip {
+    display: flex;
+    justify-content: space-between; /* Spreads items from left edge to right edge */
+    align-items: center;
+    gap: 15px;                      /* Space between the pills */
+    margin-bottom: 40px;
+    width: 100%;                    /* Ensures it takes full container width */
+}
+
+.cat-pill {
+    flex: 1;                        /* This forces all pills to be the exact same width */
+    background: white;
+    padding: 12px 10px;             /* Vertical and horizontal padding */
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: 0.3s;
+    border: 1.5px solid transparent;
+    text-align: center;             /* Centers the text/emoji inside the pill */
+    white-space: nowrap;            /* Prevents text from breaking into two lines */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+/* Hover & Active States */
+.cat-pill:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+}
+
+.cat-pill.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+/* Grid & Cards */
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.results-count { color: var(--gray); font-weight: 500; }
+
+.auction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-bottom: 4px solid var(--primary); /* Accent from dashboard */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+.product-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+
+.image-wrap { height: 200px; position: relative; }
+.image-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.status-badge { position: absolute; top: 15px; left: 15px; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.status-badge.live { background: #4ade80; color: #064e3b; }
+
+.card-content { padding: 20px; }
+.card-content h3 { font-size: 1.1rem; margin-bottom: 15px; color: var(--dark); font-weight: 700; }
+
+.meta-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.meta-group .label { display: block; font-size: 0.7rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.meta-group .price { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+.meta-group .timer { font-weight: 700; font-size: 0.95rem; }
+.align-right { text-align: right; }
+
+.btn-bid {
+    display: block;
+    text-align: center;
+    background: var(--dark);
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+.btn-bid:hover { background: var(--primary); }
+/* Ensure the link looks like a button */
+.category-strip {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.cat-pill {
+    flex: 1;
+    text-align: center;
+    background: #fff;
+    padding: 12px;
+    border-radius: 50px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 600;
+    border: 1px solid #eee;
+}
+
+.cat-pill.active {
+    background: var(--primary) !important;
+    color: #fff !important;
+}

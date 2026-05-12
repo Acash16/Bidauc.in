@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ auction.title }} — Bidauc.in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auction.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">
+  Bid<span class="highlight">auc</span>.in
+</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    {% if session.get('user_id') %}
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/signup" class="btn-nav">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <a href="/" class="back-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Auctions
+  </a>
+
+  <div class="auction-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-left">
+
+      <div class="auction-image-wrap">
+        {% if auction.image %}
+          <img src="{{ url_for('static', filename='images/' + auction.image) }}" alt="{{ auction.title }}"/>
+        {% else %}
+          <div class="img-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <h1 class="auction-title">{{ auction.title }}</h1>
+          <span class="status-badge
+                {% if auction.status == 'active' %}active
+                {% elif auction.status == 'sold' %}sold
+                {% else %}ended{% endif %}">
+                {{ auction.status | upper }}
+          </span>
+        </div>
+
+        <div class="category-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          {{ auction.category or 'General' }}
+        </div>
+
+        <p class="detail-description">{{ auction.description or 'No description provided.' }}</p>
+
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="meta-label">Seller</span>
+            <span class="meta-value">Seller #{{ auction.seller_id }}</span>
+          </div>
+          <div class="meta-item">
+             <span class="meta-label">Starting Price</span>
+               <span class="meta-value">&#8377;{{ "%.2f"|format(auction.start_price | float) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Total Bids</span>
+            <span class="meta-value">{{ bid_history | length }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Auction Ends</span>
+            <span class="meta-value">{{ auction.end_time }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bid History -->
+      <div class="history-card">
+        <div class="history-title">Bid History</div>
+        <div class="history-count">{{ bid_history | length }} bid{% if bid_history | length != 1 %}s{% endif %} placed</div>
+        {% for bid in bid_history %}
+<div class="bid-item {% if loop.first %}leading{% endif %}">
+  <div class="bidder-info">
+    <div class="bidder-name">
+      {% if bid is mapping %}
+        {{ bid.get('bidder_name', 'User #' + bid.get('user_id','?')|string) }}
+      {% else %}
+        User #{{ bid[2] }}
+      {% endif %}
+    </div>
+    <div class="bid-time">{% if bid is mapping %}{{ bid.get('timestamp','') }}{% endif %}</div>
+  </div>
+  <div class="bid-right">
+    <div class="bid-amount">
+      ₹{% if bid is mapping %}{{ "%.2f"|format(bid.get('bid_amount',0)|float) }}{% else %}{{ "%.2f"|format(bid[3]|float) }}{% endif %}
+    </div>
+    {% if auction.status == 'active'
+          and auction.sold_mode == 'manual'
+          and auction.buy_now_price
+          and session.get('user_id') == auction.seller_id %}
+      {% set bid_user = bid.get('user_id') if bid is mapping else bid[2] %}
+      {% set bid_amt  = bid.get('bid_amount',0)|float if bid is mapping else bid[3]|float %}
+      {% if bid_amt >= auction.buy_now_price %}
+        <a href="/mark_sold/{{ auction.id }}/{{ bid_user }}"
+           class="btn-mark-sold"
+           onclick="return confirm('Mark this bid as sold to this user?')">
+          ✓ Mark Sold
+        </a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+        {% if bid_history %}
+          {% for bid in bid_history %}
+            <div class="bid-item {% if loop.first %}leading{% endif %}">
+              <div class="bidder-info">
+                <div class="bidder-name">
+                  {% if bid is mapping %}
+                    {{ bid.get('bidder_name', 'User #' + bid.get('user_id', '?')|string) }}
+                  {% else %}
+                    User #{{ bid[2] }}
+                  {% endif %}
+                </div>
+                <div class="bid-time">
+                  {% if bid is mapping %}{{ bid.get('timestamp', '') }}{% else %}—{% endif %}
+                </div>
+              </div>
+              <div class="bid-right">
+               <div class="bid-amount">
+                &#8377;{% if bid is mapping %}{{ "%.2f"|format(bid.get('bid_amount', 0) | float) }}{% else %}{{ "%.2f"|format(bid[3] | float) }}{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="history-empty">No bids placed yet — be the first!</div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-right">
+
+      <!-- Current Bid -->
+      <div class="bid-card">
+        <div class="bid-card-title">Current Bid</div>
+        <div class="current-bid-amount">
+          <span class="currency-sym">&#8377;</span>
+          <span id="currentBidDisplay">
+             {{ "%.2f"|format((auction.current_bid or auction.start_price) | float) }}
+           </span>
+        </div>
+        {% if leading %}
+          <div class="leading-bidder">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+              <path d="M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+            </svg>
+            Leading bidder:
+            <strong>{% if leading is mapping %}{{ leading.get('bidder_name', 'Unknown') }}{% else %}User #{{ leading }}{% endif %}</strong>
+          </div>
+        {% else %}
+          <div class="no-bids-yet">No bids yet — be the first!</div>
+        {% endif %}
+        <div class="timer-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span class="timer-label">Time Remaining:</span>
+          <span class="timer-value" id="timerValue" data-endtime="{{ auction.end_time }}">Loading...</span>
+        </div>
+      </div>
+       {% if auction.buy_now_price %}
+<div class="buy-now-banner">
+  <div class="buy-now-left">
+    <div class="buy-now-label">
+      {% if auction.sold_mode == 'auto' %}⚡ Auto Sold{% else %}🖐 Manual Sold{% endif %}
+      &nbsp;·&nbsp; Buy Now Price
+    </div>
+    <div class="buy-now-price">₹{{ "{:,.0f}".format(auction.buy_now_price) }}</div>
+    <div class="buy-now-hint">
+      {% if auction.sold_mode == 'auto' %}
+        Bid this amount and the auction closes instantly
+      {% else %}
+        Seller will manually confirm the winning bid
+      {% endif %}
+    </div>
+  </div>
+  {% if auction.status == 'active' and session.get('user_id') %}
+    <form method="POST" action="/bid">
+      <input type="hidden" name="auction_id" value="{{ auction.id }}">
+      <input type="hidden" name="bid" value="{{ auction.buy_now_price }}">
+      <button type="submit" class="btn-buy-now">Buy Now</button>
+    </form>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if auction.status == 'sold' %}
+<div class="sold-banner">
+  <div class="sold-icon">🏆</div>
+  <div>
+    <div class="sold-title">Auction Sold!</div>
+    <div class="sold-sub">This auction has been marked as sold.</div>
+  </div>
+</div>
+{% endif %}
+      <!-- Place Bid -->
+      {% if session.get('user_id') %}
+        {% if auction.status == 'active' %}
+          <div class="place-bid-card">
+            <div class="place-bid-title">Place Your Bid</div>
+            {% set min_bid = (auction.current_bid or auction.start_price) + 1 %}
+            <div class="min-bid-note">Minimum bid: <strong>&#8377;{{ "%.2f"|format(min_bid) }}</strong></div>
+
+            <!-- Currency converter mounted here by JS -->
+            <div id="converterMount"></div>
+
+            <form id="bidForm" method="POST" action="/bid">
+              <input type="hidden" name="auction_id" value="{{ auction.id }}"/>
+              <div class="field-group">
+                <label class="field-label">Your Bid Amount (&#8377;)</label>
+                <input type="number"
+                       id="bidAmountInput"
+                       name="bid"
+                       class="field-input"
+                       placeholder="Enter amount in &#8377;"
+                       min="{{ min_bid }}"
+                       step="1"
+                       required
+                       oninput="updateConverter()"/>
+                <span id="minBidValue" data-min="{{ min_bid }}" style="display:none"></span>
+              </div>
+              <button type="submit" class="btn-place-bid">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M12 19l7-7-7-7M5 19l7-7-7-7"/>
+                </svg>
+                Place Bid
+              </button>
+            </form>
+          </div>
+        {% else %}
+          <div class="place-bid-card">
+            <div class="place-bid-title">Auction Ended</div>
+            <p style="font-size:13px;color:var(--gray);margin-top:8px;">This auction has closed.</p>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="place-bid-card">
+          <div class="place-bid-title">Want to Bid?</div>
+          <p style="font-size:13px;color:var(--gray);margin:8px 0 16px;">Log in to place a bid on this item.</p>
+          <a href="/login" style="display:block;text-align:center;padding:12px;background:var(--primary);color:#fff;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;text-decoration:none;font-size:14px;">Log In to Bid</a>
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="{{ url_for('static', filename='script/auction.js') }}"></script>
+</body>
+</html>

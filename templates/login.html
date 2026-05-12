@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login - Bidauc</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="auth-container">
+ <a href="{{ url_for('home') }}" class="auth-logo">
+    Bid<span class="highlight">auc</span>.in
+  </a>
+  <div class="auth-box">
+    <h1>Bid Big, Win Big!</h1>
+       <h2>Login to Your Account</h2>
+
+    {% if error %}
+    <p class="error-message">{{ error }}</p>
+    {% endif %}
+
+    <form action="/login" method="POST">
+
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+
+      <button type="submit">Login</button>
+
+    </form>
+
+    <p class="switch">
+      Don't have an account? <a href="/signup">Signup</a>
+    </p>
+
+  </div>
+
+</div>
+
+</body>
+</html>

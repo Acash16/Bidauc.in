@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Auction — Bidauc.in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--primary:#D90429;--light:#EDF2F4;--accent:#EF233C;--dark:#2B2D42;--gray:#8D99AE}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--light);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;position:relative;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(217,4,41,.08) 0%,transparent 70%);pointer-events:none}
+body::after{content:'';position:fixed;bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(43,45,66,.06) 0%,transparent 70%);pointer-events:none}
+.page-layout{display:grid;grid-template-columns:280px 1fr;max-width:900px;width:100%;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 32px 80px rgba(43,45,66,.14),0 2px 8px rgba(43,45,66,.06)}
+.sidebar{background:var(--dark);padding:40px 32px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.sidebar::before{content:'';position:absolute;top:-80px;right:-80px;width:220px;height:220px;background:radial-gradient(circle,rgba(217,4,41,.3) 0%,transparent 70%);pointer-events:none}
+.sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:48px}
+.logo-icon{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;fill:#fff}
+.logo-text{font-family:'Syne',sans-serif;color:#fff;font-size:16px;font-weight:700}
+.sidebar-title{font-family:'Syne',sans-serif;color:#fff;font-size:28px;font-weight:800;line-height:1.2;margin-bottom:8px}
+.sidebar-sub{color:var(--gray);font-size:13px;line-height:1.6;margin-bottom:48px}
+.steps-nav{flex:1}
+.step-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;transition:all .2s}
+.step-item:last-child{border-bottom:none}
+.step-num{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.15);color:var(--gray);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.step-item.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff}
+.step-item.done .step-num{background:rgba(217,4,41,.2);border-color:var(--primary);color:var(--primary)}
+.step-info{flex:1}
+.step-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.4);transition:color .3s;margin-bottom:2px}
+.step-item.active .step-name,.step-item.done .step-name{color:#fff}
+.step-desc{font-size:11px;color:rgba(255,255,255,.25)}
+.step-item.active .step-desc{color:var(--gray)}
+.progress-bar-wrap{margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-bottom:8px}
+.progress-track{height:4px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--primary);border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.main{padding:40px;display:flex;flex-direction:column;min-height:580px}
+.step-panel{display:none;flex-direction:column;height:100%;animation:fadeSlide .35s ease}
+.step-panel.active{display:flex}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+.panel-head{margin-bottom:28px}
+.panel-badge{display:inline-block;background:rgba(217,4,41,.1);color:var(--primary);font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase}
+.panel-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:4px}
+.panel-sub{font-size:13px;color:var(--gray)}
+.form-grid{display:grid;gap:16px;flex:1}
+.col-2{grid-template-columns:1fr 1fr}
+/* Last two fields in step 1 (location + sku) take full row each */
+#panel1 .form-grid.col-2 .field:nth-last-child(2),
+#panel1 .form-grid.col-2 .field:last-child {
+  grid-column: 1 / -1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#f_location {
+  width: 100%;
+}
+.field.full{grid-column:1/-1}
+label{font-size:12px;font-weight:500;color:var(--dark);letter-spacing:.02em}
+.required::after{content:' *';color:var(--primary)}
+input[type=text],input[type=number],input[type=datetime-local],textarea,select{width:100%;padding:11px 14px;border:1.5px solid #E5E8EF;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);background:#FAFBFC;outline:none;transition:border-color .2s,box-shadow .2s,background .2s;-webkit-appearance:none; appearance: none}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(217,4,41,.08)}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238D99AE' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+input::placeholder,textarea::placeholder{color:#BCC3CE}
+.pill-group{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:7px 16px;border-radius:20px;border:1.5px solid #E5E8EF;font-size:12px;font-weight:500;color:var(--gray);cursor:pointer;transition:all .18s;background:#FAFBFC;user-select:none}
+.pill:hover{border-color:var(--primary);color:var(--primary)}
+.pill.selected{background:var(--primary);border-color:var(--primary);color:#fff}
+.input-prefix{position:relative}
+.input-prefix span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--gray);pointer-events:none;z-index:1}
+.input-prefix input{padding-left:34px}
+.upload-zone{border:2px dashed #D5DAE5;border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFC;position:relative}
+.upload-zone:hover{border-color:var(--primary);background:rgba(217,4,41,.02)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{width:44px;height:44px;background:rgba(217,4,41,.08);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.upload-icon svg{width:20px;height:20px;stroke:var(--primary)}
+.upload-title{font-size:13px;font-weight:500;color:var(--dark);margin-bottom:4px}
+.upload-sub{font-size:11px;color:var(--gray)}
+.preview-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;justify-content:center}
+.preview-thumb{width:80px;height:80px;border-radius:8px;object-fit:cover;border:1.5px solid #E5E8EF}
+.radio-group{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.radio-card{border:1.5px solid #E5E8EF;border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .18s;text-align:center;background:#FAFBFC}
+.radio-card:hover{border-color:var(--primary)}
+.radio-card.selected{border-color:var(--primary);background:rgba(217,4,41,.05)}
+.radio-card input{display:none}
+.radio-card-label{font-size:12px;font-weight:500;color:var(--dark);display:block}
+.radio-card.selected .radio-card-label{color:var(--primary)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#FAFBFC;border:1.5px solid #E5E8EF;border-radius:10px}
+.toggle-info{flex:1}
+.toggle-title{font-size:13px;font-weight:500;color:var(--dark)}
+.toggle-desc{font-size:11px;color:var(--gray);margin-top:2px}
+.switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider-sw{position:absolute;inset:0;background:#D5DAE5;border-radius:22px;cursor:pointer;transition:background .25s}
+.slider-sw::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked+.slider-sw{background:var(--primary)}
+.switch input:checked+.slider-sw::before{transform:translateX(18px)}
+.info-tip{display:flex;gap:8px;padding:10px 14px;background:rgba(141,153,174,.08);border-radius:8px;border-left:3px solid var(--gray);font-size:12px;color:var(--gray);line-height:1.5;grid-column:1/-1}
+.review-section{margin-bottom:20px}
+.review-section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #F0F2F5}
+.review-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
+.review-key{color:var(--gray)}
+.review-val{color:var(--dark);font-weight:500;text-align:right;max-width:200px}
+.review-highlight{background:rgba(217,4,41,.05);border:1.5px solid rgba(217,4,41,.15);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.review-highlight span{font-size:12px;color:var(--gray)}
+.review-highlight strong{font-family:'Syne',sans-serif;font-size:20px;color:var(--primary);font-weight:800}
+.nav-btns{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid #F0F2F5}
+.btn-back{display:flex;align-items:center;gap:6px;padding:10px 20px;border:1.5px solid #E5E8EF;border-radius:10px;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;transition:all .18s}
+.btn-back:hover{border-color:var(--dark);color:var(--dark)}
+.btn-back svg{width:14px;height:14px;stroke:currentColor}
+.btn-next{display:flex;align-items:center;gap:8px;padding:11px 28px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.02em}
+.btn-next:hover{background:var(--accent);transform:translateY(-1px);box-shadow:0 6px 20px rgba(217,4,41,.3)}
+.btn-next:active{transform:translateY(0)}
+.btn-next svg{width:16px;height:16px;stroke:#fff}
+.btn-launch{background:var(--dark) !important}
+.btn-launch:hover{background:var(--primary) !important;transform:translateY(-1px);box-shadow:0 6px 20px rgba(43,45,66,.3) !important}
+/* LOCATION */
+
+.location-field{
+    position:relative;
+}
+
+#location-suggestions{
+    position:absolute;
+    top:100%;
+    left:0;
+
+    width:100%;
+    background:#fff;
+
+    border-radius:12px;
+    overflow:hidden;
+
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+
+    z-index:9999;
+
+    margin-top:6px;
+}
+
+.location-item{
+    padding:12px 15px;
+    cursor:pointer;
+
+    border-bottom:1px solid #eee;
+
+    transition:0.2s;
+}
+
+.location-item:hover{
+    background:#EDF2F4;
+}
+
+.location-city{
+    font-weight:600;
+    color:#2B2D42;
+    font-size:14px;
+}
+
+.location-state{
+    color:#8D99AE;
+    font-size:12px;
+    margin-top:2px;
+}
+/* LOCATION + BUTTON FIX */
+
+.nav-btns{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-top:28px;
+
+    padding-top:20px;
+
+    border-top:1px solid #F0F2F5;
+}
+
+.location-field{
+    grid-column: 1/ -1;
+    margin-bottom:0px;
+}
+
+.field.full{
+    width:100%;
+}
+/* TIME OK BUTTON */
+
+.time-ok-btn{
+
+    margin-top:10px;
+
+    padding:8px 18px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#04d956;
+
+    color:white;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+.time-ok-btn:hover{
+
+    background:#EF233C;
+
+}
+/* Sold Mode Toggle */
+.sold-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mode-option input[type="radio"] { display: none; }
+.mode-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid #e5e8ef;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: #fafbfc;
+}
+.mode-option input[type="radio"]:checked + .mode-card {
+  border-color: var(--primary);
+  background: rgba(217,4,41,0.04);
+}
+.mode-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.mode-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 2px; }
+.mode-desc  { font-size: 12px; color: var(--gray); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!--
+  ══════════════════════════════════════════════════
+  FIELD → FLASK MAPPING  (what your app.py reads)
+  ══════════════════════════════════════════════════
+  request.form['title']       ← name="title"
+  request.form['description'] ← name="description"
+  request.form['price']       ← name="price"
+  request.form['end_time']    ← name="end_time"
+  request.files['image']      ← name="image"
+  ══════════════════════════════════════════════════
+-->
+
+<form id="auctionForm"
+      method="POST"
+      action="/create_auction"
+      enctype="multipart/form-data"
+      onsubmit="return finalValidation()">
+
+  <!-- Hidden inputs synced by JS so every value reaches Flask on submit -->
+ <input type="hidden" name="title"       id="h_title">
+<input type="hidden" name="description" id="h_description">
+<input type="hidden" name="price"       id="h_price">
+
+<input type="hidden" name="start_time"  id="h_start_time">
+
+<input type="hidden" name="end_time"    id="h_end_time">
+
+<input type="hidden" name="category"    id="h_category" value="Art">
+<input type="hidden" name="condition"   id="h_condition" value="Brand New">
+<div class="page-layout">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar">
+     <a href="/" class="sidebar-logo" style="text-decoration:none;">
+  <div class="logo-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <span class="logo-text">Bidauc.in</span>
+</a>
+    <p class="sidebar-title">List Your Item</p>
+    <p class="sidebar-sub">Complete 4 simple steps to launch your auction and reach thousands of buyers.</p>
+    <nav class="steps-nav" id="stepsNav">
+      <div class="step-item active" data-step="1">
+        <div class="step-num">1</div>
+        <div class="step-info">
+          <div class="step-name">Item Details</div>
+          <div class="step-desc">Title, category &amp; condition</div>
+        </div>
+      </div>
+      <div class="step-item" data-step="2">
+        <div class="step-num">2</div>
+        <div class="step-info">
+          <div class="step-name">Pricing &amp; Timing</div>
+          <div class="step-desc">Bids, reserve &amp; duration</div>
+        </div>
+      </div>
+      <div class="step-item" data-step="3">
+        <div class="step-num">3</div>
+        <div class="step-info">
+          <div class="step-name">Photos &amp; Media</div>
+          <div class="step-desc">Image &amp; description</div>
+        </div>
+      </div>
+      <div class="step-item" data-step="4">
+        <div class="step-num">4</div>
+        <div class="step-info">
+          <div class="step-name">Review &amp; Launch</div>
+          <div class="step-desc">Confirm &amp; go live</div>
+        </div>
+      </div>
+    </nav>
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Progress</span><span id="progressPct">25%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:25%"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <main class="main">
+
+    <!-- ── STEP 1: Item Details ── -->
+    <div class="step-panel active" id="panel1">
+      <div class="panel-head">
+        <span class="panel-badge">Step 1 of 4</span>
+        <h2 class="panel-title">Item Details</h2>
+        <p class="panel-sub">Tell buyers what you're selling</p>
+      </div>
+      <div class="form-grid col-2" style="align-content:start;">
+
+        <div class="field full">
+          <label class="required">Item Title</label>
+          <input type="text" id="f_title"
+                 placeholder="e.g. Vintage Rolex Submariner 1967" maxlength="80"/>
+        </div>
+        <div class="field full">
+          <label class="required">Category</label>
+          <div class="pill-group" id="categoryPills">
+            <!-- IMPORTANT: data-cat names are singular to match DB -->
+            <div class="pill selected" data-cat="Art">🎨 Art</div>
+            <div class="pill" data-cat="Electronics">⚡ Electronics</div>
+            <div class="pill" data-cat="Collectibles">🏆 Collectibles</div>
+            <div class="pill" data-cat="Vehicle">🚗 Vehicles</div>
+            <div class="pill" data-cat="Jewellery">💎 Jewellery</div>
+            <div class="pill" data-cat="Fashion">👗 Fashion</div>
+            <div class="pill" data-cat="Property">🏠 Real Estate</div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label class="required">Item Condition</label>
+          <div class="radio-group" id="conditionGroup">
+            <label class="radio-card selected" data-val="Brand New">
+              <input type="radio" name="_cond" value="Brand New" checked/>
+              <span class="radio-card-label">Brand New</span>
+            </label>
+            <label class="radio-card" data-val="Like New">
+              <input type="radio" name="_cond" value="Like New"/>
+              <span class="radio-card-label">Like New</span>
+            </label>
+            <label class="radio-card" data-val="Good">
+              <input type="radio" name="_cond" value="Good"/>
+              <span class="radio-card-label">Good</span>
+            </label>
+            <label class="radio-card" data-val="Fair">
+              <input type="radio" name="_cond" value="Fair"/>
+              <span class="radio-card-label">Fair</span>
+            </label>
+            <label class="radio-card" data-val="For Parts">
+              <input type="radio" name="_cond" value="For Parts"/>
+              <span class="radio-card-label">For Parts</span>
+            </label>
+            <label class="radio-card" data-val="Refurbished">
+              <input type="radio" name="_cond" value="Refurbished"/>
+              <span class="radio-card-label">Refurbished</span>
+            </label>
+          </div>
+        </div>
+       <div class="field location-field">
+
+    <label>Seller Location</label>
+
+    <input
+         type="text"
+         id="f_location"
+         placeholder="City, State"
+         autocomplete="off"/>
+
+    <div id="location-suggestions"></div>
+
+</div>
+
+</div>
+
+      <div class="nav-btns" >
+        <div></div>
+        <button type="button" class="btn-next" onclick="goTo(2)">
+          Pricing &amp; Timing
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Pricing & Timing ── -->
+    <div class="step-panel" id="panel2">
+      <div class="panel-head">
+        <span class="panel-badge">Step 2 of 4</span>
+        <h2 class="panel-title">Pricing &amp; Timing</h2>
+        <p class="panel-sub">Set your bids and auction window</p>
+      </div>
+      <div class="form-grid col-2" style="align-content:start;">
+
+        <div class="field">
+          <label class="required">Starting Bid (₹)</label>
+          <div class="input-prefix">
+            <span>₹</span>
+            <input type="number" id="f_price" placeholder="500" min="1"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Reserve Price (₹)</label>
+          <div class="input-prefix">
+            <span>₹</span>
+            <input type="number" id="f_reserve" placeholder="Optional" min="1"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Buy Now Price (₹)</label>
+          <div class="input-prefix">
+            <span>₹</span>
+            <input type="number" id="f_buynow" placeholder="Optional" min="1"/>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="required">Bid Increment (₹)</label>
+          <select id="f_increment">
+            <option value="50">₹50</option>
+            <option value="100" selected>₹100</option>
+            <option value="250">₹250</option>
+            <option value="500">₹500</option>
+            <option value="1000">₹1,000</option>
+          </select>
+        </div>
+         <div class="field">
+
+            <label class="required">Auction Start</label>
+
+              <input
+               type="datetime-local"
+               id="f_start"
+               />
+
+               <button
+                type="button"
+               class="time-ok-btn"
+                onclick="saveStartTime()"
+                >
+               OK
+              </button>
+
+              <small id="timeSaved"
+               style="color:#28a745;font-size:12px;margin-top:6px;display:none;">
+                ✓ Time selected successfully
+               </small>
+
+        </div>
+
+        <div class="field">
+          <label class="required">Auction End</label>
+          <!-- end_time → request.form['end_time'] -->
+          <input type="datetime-local" id="f_end"/>
+        </div>
+
+        <div class="field full">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Auto-extend on last-minute bids</div>
+              <div class="toggle-desc">Extends by 5 min if a bid comes in within the final 2 minutes</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="f_autoextend" checked/>
+              <span class="slider-sw"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Allow proxy bidding</div>
+              <div class="toggle-desc">Buyers set a max bid and the system bids automatically</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="f_proxy" checked/>
+              <span class="slider-sw"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="info-tip">
+          💡 Reserve price keeps your item from selling below minimum. It stays hidden from buyers.
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button type="button" class="btn-back" onclick="goTo(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <button type="button" class="btn-next" onclick="goTo(3)">
+          Photos &amp; Media
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Photos & Media ── -->
+    <div class="step-panel" id="panel3">
+      <div class="panel-head">
+        <span class="panel-badge">Step 3 of 4</span>
+        <h2 class="panel-title">Photos &amp; Description</h2>
+        <p class="panel-sub">Great photos get 3× more bids</p>
+      </div>
+      <div class="form-grid" style="align-content:start;">
+
+        <div class="field">
+          <label class="required">Item Image</label>
+          <div class="upload-zone">
+            <!-- name="image" is what Flask reads via request.files['image'] -->
+            <input type="file" accept="image/*" name="image"
+                   id="f_image" onchange="handleFiles(this)"/>
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="upload-title" id="uploadTitle">Click or drag image here</div>
+            <div class="upload-sub">PNG, JPG, WEBP · max 10 MB</div>
+            <div class="preview-grid" id="previewGrid"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="required">Item Description</label>
+          <textarea id="f_description"
+            placeholder="Features, history, defects, what's included..."
+            style="min-height:120px;"></textarea>
+        </div>
+         <!-- Buy Now Price -->
+<div class="field-group">
+  <label class="field-label">Buy Now Price (₹) <span style="color:var(--gray);font-weight:400">— Optional</span></label>
+  <div class="input-prefix-wrap">
+    <span class="input-prefix">₹</span>
+    <input type="number" name="buy_now_price" id="buy_now_price"
+           class="field-input with-prefix"
+           placeholder="Optional — leave blank to disable"
+           min="0" step="1"
+           oninput="toggleSoldMode()">
+  </div>
+</div>
+ 
+<!-- Sold Mode — only shown when Buy Now Price is set -->
+<div class="field-group" id="sold-mode-wrap" style="display:none;">
+  <label class="field-label">Sold Mode</label>
+  <div class="sold-mode-toggle">
+ 
+    <label class="mode-option" id="mode-auto">
+      <input type="radio" name="sold_mode" value="auto" checked>
+      <div class="mode-card">
+        <div class="mode-icon">⚡</div>
+        <div class="mode-text">
+          <div class="mode-title">Auto Sold</div>
+          <div class="mode-desc">Auction closes instantly when a bid meets or exceeds the Buy Now price</div>
+        </div>
+      </div>
+    </label>
+ 
+    <label class="mode-option" id="mode-manual">
+      <input type="radio" name="sold_mode" value="manual">
+      <div class="mode-card">
+        <div class="mode-icon">🖐</div>
+        <div class="mode-text">
+          <div class="mode-title">Manual Sold</div>
+          <div class="mode-desc">You review bids and manually click "Mark as Sold" to choose the winner</div>
+        </div>
+      </div>
+    </label>
+ 
+  </div>
+</div>
+
+        <div class="form-grid col-2" style="gap:12px;">
+          <div class="field">
+            <label>Shipping Options</label>
+            <select id="f_shipping">
+              <option value="standard">Standard (5–7 days)</option>
+              <option value="express">Express (1–2 days)</option>
+              <option value="pickup">Local Pickup Only</option>
+              <option value="both">Shipping + Pickup</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Shipping Cost (₹)</label>
+            <div class="input-prefix">
+              <span>₹</span>
+              <input type="number" id="f_shipcost" placeholder="0 = Free" min="0"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Accept returns</div>
+              <div class="toggle-desc">Buyers can return within 7 days for a full refund</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="f_returns"/>
+              <span class="slider-sw"></span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="nav-btns">
+        <button type="button" class="btn-back" onclick="goTo(2)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <button type="button" class="btn-next" onclick="goTo(4)">
+          Review &amp; Launch
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: Review & Launch ── -->
+    <div class="step-panel" id="panel4">
+      <div class="panel-head">
+        <span class="panel-badge">Step 4 of 4</span>
+        <h2 class="panel-title">Review &amp; Launch</h2>
+        <p class="panel-sub">Check everything before going live</p>
+      </div>
+      <div id="reviewContent" style="flex:1;overflow-y:auto;"></div>
+      <div class="nav-btns">
+        <button type="button" class="btn-back" onclick="goTo(3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <!--
+          type="submit" → syncs hidden fields then POSTs the form to /create_auction
+          Flask saves to DB and redirects to /auction/<id>
+        -->
+        <button type="submit" class="btn-next btn-launch" onclick="syncHidden()">
+          🔨 Launch Auction
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+</form>
+
+<script>
+var currentStep = 1;
+
+/* ── 1. Step Validation ── */
+function validateStep(step){
+    if(step === 1){
+        const title = document.getElementById('f_title').value.trim();
+        if(title === ""){ alert("Please enter item title"); return false; }
+    }
+    if(step === 2){
+        const price = document.getElementById('f_price').value.trim();
+        const end = document.getElementById('f_end').value.trim();
+        if(price === ""){ alert("Please enter starting bid"); return false; }
+        if(end === ""){ alert("Please select auction end date"); return false; }
+    }
+    if(step === 3){
+        const image = document.getElementById('f_image').files.length;
+        const desc = document.getElementById('f_description').value.trim();
+        if(image === 0){ alert("Please upload item image"); return false; }
+        if(desc === ""){ alert("Please enter description"); return false; }
+    }
+    return true;
+}
+
+/* ── 2. Navigation Logic ── */
+function goTo(step) {
+    if(step > currentStep){
+        if(!validateStep(currentStep)) return;
+    }
+
+    document.getElementById('panel' + currentStep).classList.remove('active');
+    document.querySelectorAll('.step-item').forEach(function(el) {
+        var s = parseInt(el.dataset.step);
+        el.classList.remove('active','done');
+        if (s === step) el.classList.add('active');
+        else if (s < step) el.classList.add('done');
+    });
+
+    currentStep = step;
+    document.getElementById('panel' + step).classList.add('active');
+    var pct = Math.round(step / 4 * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+
+    if (step === 4) {
+        syncHidden();
+        buildReview();
+    }
+}
+
+/* ── 3. Data Syncing Logic ── */
+function syncHidden() {
+    document.getElementById('h_title').value = document.getElementById('f_title').value;
+    document.getElementById('h_description').value = document.getElementById('f_description').value;
+    document.getElementById('h_price').value = document.getElementById('f_price').value;
+    document.getElementById('h_start_time').value = document.getElementById('f_start').value;
+    document.getElementById('h_end_time').value = document.getElementById('f_end').value;
+    // Note: Category and Condition are synced instantly when you click their pills
+}
+
+/* ── 4. Pills & Selection Logic (Category/Condition) ── */
+document.addEventListener('DOMContentLoaded', function() {
+    // Category Pills
+    const categoryPills = document.querySelectorAll('#categoryPills .pill');
+    const hCategory = document.getElementById('h_category');
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            categoryPills.forEach(p => p.classList.remove('selected'));
+            this.classList.add('selected');
+            hCategory.value = this.getAttribute('data-cat');
+            console.log("DB Category set to:", hCategory.value);
+        });
+    });
+
+    // Condition Cards
+    const conditionCards = document.querySelectorAll('#conditionGroup .radio-card');
+    const hCondition = document.getElementById('h_condition');
+
+    conditionCards.forEach(card => {
+        card.addEventListener('click', function() {
+            conditionCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            hCondition.value = this.getAttribute('data-val');
+        });
+    });
+
+    // Default dates
+    const now = new Date();
+    const later = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const formatLocal = (d) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0,16);
+    
+    document.getElementById("f_start").value = formatLocal(now);
+    document.getElementById("f_end").value = formatLocal(later);
+    syncHidden();
+});
+
+/* ── 5. Review Screen Builder ── */
+function buildReview() {
+    const price = document.getElementById('h_price').value;
+    const cat = document.getElementById('h_category').value;
+    const title = document.getElementById('h_title').value;
+
+    document.getElementById('reviewContent').innerHTML = `
+        <div class="review-highlight"><span>Starting Bid</span><strong>₹${parseInt(price).toLocaleString('en-IN')}</strong></div>
+        <div class="review-section">
+            <div class="review-section-title">Final Check</div>
+            <div class="review-row"><span class="review-key">Title</span><span class="review-val">${title}</span></div>
+            <div class="review-row"><span class="review-key">Category</span><span class="review-val">${cat}</span></div>
+            <div class="review-row"><span class="review-key">Status</span><span class="review-val" style="color:green">Ready to Launch</span></div>
+        </div>
+    `;
+}
+
+/* ── 6. Image Preview ── */
+function handleFiles(input) {
+    const grid = document.getElementById('previewGrid');
+    grid.innerHTML = '';
+    if (!input.files[0]) return;
+    document.getElementById('uploadTitle').textContent = '✅ ' + input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'preview-thumb';
+        grid.appendChild(img);
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+/* ── 7. Location Logic ── */
+const locInput = document.getElementById("f_location");
+const suggestions = document.getElementById("location-suggestions");
+let debounceTimer;
+
+locInput.addEventListener("input", function() {
+    clearTimeout(debounceTimer);
+    const q = this.value.trim();
+    if(q.length < 2) { suggestions.innerHTML = ""; return; }
+    debounceTimer = setTimeout(() => {
+        fetch(`https://photon.komoot.io/api/?q=${q}&limit=5`)
+            .then(r => r.json())
+            .then(data => {
+                suggestions.innerHTML = "";
+                data.features.forEach(f => {
+                    const city = f.properties.city || f.properties.name || "";
+                    const state = f.properties.state || "";
+                    if(!city) return;
+                    const div = document.createElement("div");
+                    div.className = "location-item";
+                    div.innerHTML = `<div class="location-city">${city}</div><div class="location-state">${state}</div>`;
+                    div.onclick = () => { locInput.value = city + ", " + state; suggestions.innerHTML = ""; };
+                    suggestions.appendChild(div);
+                });
+            });
+    }, 300);
+});
+</script>
+<script>
+function toggleSoldMode() {
+  var val = document.getElementById('buy_now_price').value.trim();
+  document.getElementById('sold-mode-wrap').style.display = val ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

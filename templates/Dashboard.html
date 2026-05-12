@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Bidauc.in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Dashboard.css') }}"/>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar">
+  <a href="/" class="nav-logo">Bid<span>auc</span>.in</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/create_auction" class="btn-create-nav">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Create Auction
+    </a>
+    <a href="/logout">Logout</a>
+  </div>
+</nav>
+
+<!-- ═══════════ PAGE ═══════════ -->
+<div class="page-wrapper">
+
+  <!-- ── Welcome Bar ── -->
+  <div class="welcome-bar">
+    <div class="welcome-text">
+      <div class="welcome-greeting">Welcome , {{ session.get('user_name', 'User') }} 👋</div>
+      <div class="welcome-sub">Here's what's happening with your auctions today.</div>
+    </div>
+    <a href="/create_auction" class="btn-create-hero">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Create Auction
+    </a>
+  </div>
+
+  <!-- ── Stats Row ── -->
+  <div class="stats-row">
+
+    <div class="stat-card highlight">
+      <div class="stat-icon red">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <div class="stat-label">Active listings</div>
+      <div class="stat-value red">{{ auctions | selectattr('8', 'equalto', 'active') | list | length if auctions else 0 }}</div>
+      <div class="stat-sub">Auctions you're selling</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="stat-label">Bids placed</div>
+      <div class="stat-value">{{ bids | length }}</div>
+      <div class="stat-sub">Total bids by you</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+        </svg>
+      </div>
+      <div class="stat-label">Auctions ended</div>
+      <div class="stat-value">{{ auctions | rejectattr('8', 'equalto', 'active') | list | length if auctions else 0 }}</div>
+      <div class="stat-sub">Completed listings</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-label">Total auctions</div>
+      <div class="stat-value">{{ auctions | length if auctions else 0 }}</div>
+      <div class="stat-sub">All time listings</div>
+    </div>
+
+  </div>
+
+  <!-- ── Your Listed Auctions ── -->
+  <div>
+    <div class="section-header">
+      <div class="section-title">Your listed auctions</div>
+      <a href="/create_auction" class="section-link">+ New auction</a>
+    </div>
+
+    <div class="auction-cards-grid">
+      {% if auctions %}
+        {% for item in auctions %}
+        <div class="auction-card">
+          <div class="auction-card-img">
+            {% if item[3] %}
+              <img src="{{ url_for('static', filename='images/' + item[3]) }}" alt="{{ item[1] }}"/>
+            {% else %}
+              <div class="auction-card-img-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+              </div>
+            {% endif %}
+          </div>
+          <div class="auction-card-body">
+            <span class="status-pill {% if item[8] == 'active' %}active{% else %}ended{% endif %}">
+              {{ item[8] | upper }}
+            </span>
+            <div class="auction-card-title">{{ item[1] }}</div>
+            <div class="auction-card-price">&#8377;{{ "%.2f"|format(item[5] or item[4]|float) }} current bid</div>
+            <div class="auction-card-meta">Ends: {{ item[6] }}</div>
+            <div class="auction-card-actions">
+              <a href="/auction/{{ item[0] }}" class="btn-view">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                View
+              </a>
+              <a href="/delete_auction/{{ item[0] }}"
+                 class="btn-delete-auction"
+                 onclick="return confirm('Delete this auction? This cannot be undone.')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;stroke:var(--gray)">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <p>You haven't listed any auctions yet.</p>
+          <a href="/create_auction" class="btn-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Create your first auction
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Min-Heap + Notifications ── -->
+  <div class="two-col">
+
+    <!-- Cheapest biddable (min-heap algorithm) -->
+    <div class="heap-card">
+      <div class="heap-card-header">
+        <div class="heap-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Cheapest you can still win
+        </div>
+        <div class="heap-card-sub">Min-heap sorted — best value active auctions</div>
+      </div>
+      {% if cheapest_biddable %}
+        <table class="heap-table">
+          <thead>
+            <tr>
+              <th>Auction</th>
+              <th>Current bid</th>
+              <th>Ends</th>
+              <th style="text-align:right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cheapest_biddable %}
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>&#8377;{{ "%.2f"|format(item.current_bid) }}</td>
+              <td>{{ item.end_time or '—' }}</td>
+              <td style="text-align:right">
+                <a href="/auction/{{ item.id }}" class="btn-bid-now">Bid now</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div style="padding:24px 0;text-align:center;font-size:13px;color:var(--gray)">
+          No active auctions available to bid on.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Notifications -->
+    <div class="notif-card">
+      <div class="notif-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        Notifications
+        {% if bids | length > 0 %}
+          <span class="notif-badge">{{ [bids | length, 9] | min }}{% if bids | length > 9 %}+{% endif %}</span>
+        {% endif %}
+      </div>
+
+      {% if bids %}
+        {% for bid in bids[:4] %}
+        <div class="notif-item">
+          <div class="notif-dot {% if not loop.first %}read{% endif %}"></div>
+          <div class="notif-content">
+            <div class="notif-text">You placed a bid of <b>&#8377;{{ "%.2f"|format(bid[3]) }}</b> on <b>{{ bid[4] }}</b></div>
+            <div class="notif-time">Bid #{{ bid[0] }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {% if bids | length > 4 %}
+          <div style="padding-top:10px;font-size:12px;color:var(--gray);text-align:center">
+            +{{ bids | length - 4 }} more bids — see below
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="notif-empty">No recent activity yet.</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ── Your Bids Table ── -->
+  <div>
+    <div class="section-header">
+      <div class="section-title">Your bids</div>
+    </div>
+
+    <div class="bids-section-card">
+      {% if bids %}
+        <div class="bids-table-wrap">
+          <table class="bids-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Auction</th>
+                <th>Your bid</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for bid in bids %}
+              <tr>
+                <td style="color:var(--gray);font-size:12px">{{ loop.index }}</td>
+                <td>
+                  <a href="/auction/{{ bid[1] }}" style="color:var(--dark);font-weight:500;">
+                    {{ bid[4] }}
+                  </a>
+                </td>
+                <td class="bid-amount-cell">&#8377;{{ "%.2f"|format(bid[3]) }}</td>
+                <td>
+                  <!-- Status is shown as leading for highest bid, outbid otherwise -->
+                  {% if loop.first %}
+                    <span class="pill-leading">Leading</span>
+                  {% else %}
+                    <span class="pill-outbid">Outbid</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="/delete_bid/{{ bid[0] }}"
+                     class="btn-delete-bid"
+                     onclick="return confirm('Delete this bid?')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                    Delete bid
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="bids-empty">You haven't placed any bids yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div><!-- /page-wrapper -->
+
+</body>
+</html>
