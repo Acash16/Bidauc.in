@@ -15,3 +15,7 @@ venv/
 
 # Uploaded profile images
 static/images/profiles/
+
+__pycache__/
+auction_backup/
+*.pyc
