@@ -5,15 +5,6 @@
 /* ── Countdown Timer ── */
 function parseEndTime(str) {
   if (!str) return NaN;
-
-  // Already a clean ISO string with seconds → just parse
-  // Handle formats from SQLite:
-  //   "2026-05-07T01:10"        (no seconds)
-  //   "2026-05-07T01:10:00"     (with seconds)
-  //   "2026-05-07 01:10"        (space separator, no seconds)
-  //   "2026-05-07 01:10:00"     (space separator, with seconds)
-
-  // Normalise: replace space with T
   var s = str.trim().replace(' ', 'T');
   var m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
   if (m) {
@@ -70,7 +61,6 @@ function initTimer(endTimeStr) {
 
     timerEl.textContent = parts.join(' ');
 
-    // turn red when under 1 hour
     if (diff < 3600000) {
       timerEl.className = 'timer-value ending-soon';
     }
@@ -81,21 +71,12 @@ function initTimer(endTimeStr) {
 }
 
 /* ── Currency Converter ── */
-var convRates = null;   // cached rates relative to INR
+var convRates   = null;
 var convVisible = true;
 
-// Hardcoded approximate rates (INR base)
-// These are used as fallback if no live API is available
 var FALLBACK_RATES = {
-  INR: 1,
-  USD: 0.012,
-  EUR: 0.011,
-  GBP: 0.0095,
-  JPY: 1.83,
-  AED: 0.044,
-  SGD: 0.016,
-  CAD: 0.016,
-  AUD: 0.019
+  INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0095,
+  JPY: 1.83, AED: 0.044, SGD: 0.016, CAD: 0.016, AUD: 0.019
 };
 
 var CURRENCY_SYMBOLS = {
@@ -103,7 +84,6 @@ var CURRENCY_SYMBOLS = {
   JPY: '¥', AED: 'د.إ', SGD: 'S$', CAD: 'C$', AUD: 'A$'
 };
 
-// Currencies shown in the converter (edit freely)
 var SHOW_CURRENCIES = ['USD', 'EUR', 'GBP', 'AED', 'JPY', 'SGD'];
 
 function getBaseAmount() {
@@ -174,7 +154,6 @@ function buildConverterHTML() {
   );
 }
 
-/* ── Bid Amount Input live update ── */
 function initConverter() {
   var wrap = document.getElementById('converterMount');
   if (!wrap) return;
@@ -183,8 +162,49 @@ function initConverter() {
   var input = document.getElementById('bidAmountInput');
   if (input) {
     input.addEventListener('input', updateConverter);
-    // Trigger once on load if there's a min value already
     updateConverter();
+  }
+}
+
+/* ── Number to Indian Words ── */
+var _a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+          'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+          'Seventeen','Eighteen','Nineteen'];
+var _b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+
+function inWords(n) {
+  n = Math.floor(n);
+  if (n === 0) return 'Zero';
+  if (n < 0)   return 'Minus ' + inWords(-n);
+  var str = '';
+  if (n >= 10000000) { str += inWords(Math.floor(n / 10000000)) + ' Crore '; n %= 10000000; }
+  if (n >= 100000)   { str += inWords(Math.floor(n / 100000))   + ' Lakh ';  n %= 100000; }
+  if (n >= 1000)     { str += inWords(Math.floor(n / 1000))     + ' Thousand '; n %= 1000; }
+  if (n >= 100)      { str += _a[Math.floor(n / 100)]           + ' Hundred '; n %= 100; }
+  if (n > 19)        { str += _b[Math.floor(n / 10)] + ' ' + _a[n % 10]; }
+  else               { str += _a[n]; }
+  return str.trim();
+}
+
+function updateBidWords() {
+  var el  = document.getElementById('currentBidDisplay');
+  var out = document.getElementById('bidAmountWords');
+  if (!el || !out) return;
+  var val = parseFloat(el.textContent.replace(/,/g, ''));
+  if (!isNaN(val) && val > 0) {
+    out.textContent = inWords(val) + ' Rupees';
+  } else {
+    out.textContent = '';
+  }
+}
+
+function initBidWords() {
+  updateBidWords();
+  // Watch for live bid updates (e.g. WebSocket / polling updating the span)
+  var target = document.getElementById('currentBidDisplay');
+  if (target && window.MutationObserver) {
+    var obs = new MutationObserver(updateBidWords);
+    obs.observe(target, { childList: true, subtree: true, characterData: true });
   }
 }
 
@@ -199,8 +219,12 @@ function showToast(msg, type) {
 
 /* ── Form validation before submit ── */
 function validateBid(event) {
-  var minBid  = parseFloat(document.getElementById('minBidValue') ? document.getElementById('minBidValue').dataset.min : 0);
-  var amount  = parseFloat(document.getElementById('bidAmountInput').value);
+  var minBid = parseFloat(
+    document.getElementById('minBidValue')
+      ? document.getElementById('minBidValue').dataset.min
+      : 0
+  );
+  var amount = parseFloat(document.getElementById('bidAmountInput').value);
 
   if (!amount || amount < minBid) {
     event.preventDefault();
@@ -212,6 +236,7 @@ function validateBid(event) {
 
 /* ── Init on DOM ready ── */
 document.addEventListener('DOMContentLoaded', function() {
+
   // Timer
   var timerEl = document.getElementById('timerValue');
   if (timerEl && timerEl.dataset.endtime) {
@@ -221,9 +246,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Currency converter
   initConverter();
 
-  // Bid form submit validation
+  // Bid form validation
   var bidForm = document.getElementById('bidForm');
   if (bidForm) {
     bidForm.addEventListener('submit', validateBid);
   }
+
+  // Bid amount in words
+  initBidWords();
+
 });

@@ -5,6 +5,7 @@ from auction_scheduler import auctions_bp
 import os
 import sqlite3
 import requests
+import random
 
 # ── ALGORITHMS ─────────────────────────────
 from algorithms import (
@@ -50,9 +51,6 @@ def init_db():
     )
     ''')
 
-    # NOTE: category column added between image and start_price
-    # Column order: id, title, description, image, category,
-    #               start_price, current_bid, end_time, seller_id, status
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS auctions (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +62,9 @@ def init_db():
         current_bid REAL,
         end_time    TEXT,
         seller_id   INTEGER,
-        status      TEXT DEFAULT 'active'
+        status      TEXT DEFAULT 'active',
+        buy_now_price REAL,
+        sold_mode   TEXT
     )
     ''')
 
@@ -110,25 +110,44 @@ def init_db():
 
 init_db()
 
+# ── AUTO-UPGRADE USERS TABLE ───────────────
+# This ensures your old users table gets the new profile columns safely
+def upgrade_users_table():
+    conn = get_db()
+    columns_to_add = [
+        "surname TEXT", "dob TEXT", "gender TEXT", 
+        "address TEXT", "pincode TEXT", "state TEXT", 
+        "city TEXT", "profile_pic TEXT"
+    ]
+    for col in columns_to_add:
+        try:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass # Column already exists, safe to ignore!
+    conn.commit()
+    conn.close()
+
+upgrade_users_table()
+
 
 # ── COLUMN HELPER ─────────────────────────
 def row_to_auction(row):
-   
     return {
-        "id":          row[0],
-        "title":       row[1],
-        "description": row[2],
-        "image":       row[3],
-        "start_price": float(row[4]) if row[4] else 0.0,
-        "current_bid": float(row[5]) if row[5] else (float(row[4]) if row[4] else 0.0),
-        "end_time":    row[6],
-        "seller_id":   row[7],
-        "status":      row[8] or "active",
-        "category":    row[9] if len(row) > 9 and row[9] else "General",
+        "id":            row[0],
+        "title":         row[1],
+        "description":   row[2],
+        "image":         row[3],
+        "start_price":   float(row[4]) if row[4] else 0.0,
+        "current_bid":   float(row[5]) if row[5] else (float(row[4]) if row[4] else 0.0),
+        "end_time":      row[6],
+        "seller_id":     row[7],
+        "status":        row[8] or "active",
+        "category":      row[9] if len(row) > 9 and row[9] else "General",
         "buy_now_price": float(row[10]) if len(row) > 10 and row[10] else None,
         "sold_mode":     row[11] if len(row) > 11 and row[11] else "manual",
         "sold_to":       row[12] if len(row) > 12 else None,
     }
+
 # ── EXPIRE AUCTIONS ───────────────────────
 def expire_auctions():
     conn = None
@@ -152,19 +171,14 @@ def expire_auctions():
 @app.route('/')
 def home():
     expire_auctions()
-
     selected_cat = request.args.get('cat', 'All')
-
     conn = get_db()
     cursor = conn.cursor()
 
-    # Stats
     cursor.execute("SELECT COUNT(*) FROM auctions WHERE status = 'active'")
     active_raw = cursor.fetchone()[0]
-
     cursor.execute("SELECT COUNT(*) FROM users")
     users_raw = cursor.fetchone()[0]
-
     cursor.execute("SELECT SUM(bid_amount) FROM bids")
     bids_sum_raw = cursor.fetchone()[0] or 0
 
@@ -177,7 +191,6 @@ def home():
         "bids_suffix":   "Cr" if bids_sum_raw >= 10000000 else ("L" if bids_sum_raw >= 100000 else "")
     }
 
-    # Reviews
     cursor.execute("""
         SELECT users.name, reviews.stars, reviews.comment
         FROM reviews
@@ -194,7 +207,6 @@ def home():
         for r in cursor.fetchall()
     ]
 
-    # Auctions
     if selected_cat and selected_cat != "All":
         cursor.execute("""
             SELECT * FROM auctions
@@ -225,58 +237,124 @@ def home():
     )
 
 
-# ── SIGNUP ───────────────────────────────
+# ── SIGNUP  ───────────────────────
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+
     if request.method == 'POST':
+
+        name = request.form.get('name')
+        mobile = request.form.get('mobile')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Hash password
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+
         conn = get_db()
         cursor = conn.cursor()
 
-        name     = request.form['name']
-        mobile   = request.form['mobile']
-        email    = request.form['email']
-        password = request.form['password']
+        try:
 
-        hashed = bcrypt.generate_password_hash(password).decode('utf-8')
+            cursor.execute(
+                "INSERT INTO users (name, mobile, email, password) VALUES (?, ?, ?, ?)",
+                (name, mobile, email, hashed_pw)
+            )
 
-        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
-        if cursor.fetchone():
+            conn.commit()
+
+            return redirect('/login')
+
+        except Exception as e:
+
+            return render_template(
+                "signup.html",
+                error="Email or Mobile already registered."
+            )
+
+        finally:
             conn.close()
-            return "User already exists"
-
-        cursor.execute(
-            "INSERT INTO users (name, mobile, email, password) VALUES (?, ?, ?, ?)",
-            (name, mobile, email, hashed)
-        )
-        conn.commit()
-        conn.close()
-        return redirect('/login')
 
     return render_template("signup.html")
-
-
-# ── LOGIN ───────────────────────────────
+# ── LOGIN ───────────────────────
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+
         conn = get_db()
         cursor = conn.cursor()
-
-        email    = request.form['email']
-        password = request.form['password']
-
         cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         user = cursor.fetchone()
         conn.close()
 
+        # If user exists and the password matches
         if user and bcrypt.check_password_hash(user[4], password):
-            session['user_id']   = user[0]
+            # Log the user in by saving details to the session
+            session['user_id'] = user[0]
             session['user_name'] = user[1]
             return redirect('/dashboard')
-
-        return render_template("login.html", error="Invalid email or password")
+        else:
+            return render_template("login.html", error="Invalid email or password")
 
     return render_template("login.html")
+# ── PROFILE AND LOCATION API ─────────────
+@app.route('/get_location/<pincode>')
+def get_location(pincode):
+    try:
+        url = f"https://api.postalpincode.in/pincode/{pincode}"
+        response = requests.get(url).json()
+        if response and response[0]['Status'] == 'Success':
+            post_office = response[0]['PostOffice'][0]
+            return jsonify({
+                "state": post_office['State'], 
+                "city": post_office['District']
+            })
+    except Exception as e:
+        print(f"Pincode Error: {e}")
+    return jsonify({"state": "", "city": ""})
+
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    surname = request.form.get('surname')
+    dob     = request.form.get('dob')
+    gender  = request.form.get('gender')
+    address = request.form.get('address')
+    pincode = request.form.get('pincode')
+    state   = request.form.get('state')
+    city    = request.form.get('city')
+
+    profile_pic = request.files.get('profile_pic')
+    pic_filename = None
+
+    if profile_pic and profile_pic.filename != '':
+        pic_filename = f"user_{session['user_id']}_{profile_pic.filename}"
+        os.makedirs("static/images/profiles", exist_ok=True)
+        profile_pic.save(os.path.join('static/images/profiles', pic_filename))
+
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    if pic_filename:
+        cursor.execute("""
+            UPDATE users 
+            SET surname=?, dob=?, gender=?, address=?, pincode=?, state=?, city=?, profile_pic=?
+            WHERE id=?
+        """, (surname, dob, gender, address, pincode, state, city, pic_filename, session['user_id']))
+    else:
+        cursor.execute("""
+            UPDATE users 
+            SET surname=?, dob=?, gender=?, address=?, pincode=?, state=?, city=?
+            WHERE id=?
+        """, (surname, dob, gender, address, pincode, state, city, session['user_id']))
+    
+    conn.commit()
+    conn.close()
+    return redirect('/dashboard')
 
 
 # ── DASHBOARD ─────────────────────────────
@@ -288,11 +366,11 @@ def dashboard():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT * FROM auctions
-        WHERE seller_id = ?
-        ORDER BY id DESC
-    """, (session['user_id'],))
+    # Get FULL User Data for the Profile Form
+    cursor.execute("SELECT * FROM users WHERE id=?", (session['user_id'],))
+    user_data = cursor.fetchone()
+
+    cursor.execute("SELECT * FROM auctions WHERE seller_id = ? ORDER BY id DESC", (session['user_id'],))
     auctions = cursor.fetchall()
 
     cursor.execute("""
@@ -303,11 +381,11 @@ def dashboard():
         ORDER BY bids.id DESC
     """, (session['user_id'],))
     bids = cursor.fetchall()
-
     conn.close()
 
     return render_template(
         "dashboard.html",
+        user=user_data,  # Passed for the profile form!
         auctions=auctions,
         bids=bids,
         cheapest_biddable=get_cheapest_biddable(session['user_id'])
@@ -328,7 +406,7 @@ def create_auction():
         category    = request.form.get('category', 'Other')
         buy_now_raw   = request.form.get('buy_now_price', '').strip()
         buy_now_price = float(buy_now_raw) if buy_now_raw else None
-        sold_mode     = request.form.get('sold_mode', 'manual')  # 'auto' or 'manual'
+        sold_mode     = request.form.get('sold_mode', 'manual')
 
         image_file     = request.files.get('image')
         image_filename = ""
@@ -349,20 +427,17 @@ def create_auction():
         conn.commit()
         auction_id = cursor.lastrowid
         conn.close()
-
         return redirect('/auction/' + str(auction_id))
 
     return render_template('create_auction.html')
 
 
-# ── VIEW AUCTION ─────────────────────────
+# ── VIEW AUCTION & BID ───────────────────
 @app.route('/auction/<int:id>')
 def auction(id):
     expire_auctions()
-
     conn = get_db()
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM auctions WHERE id=?", (id,))
     row = cursor.fetchone()
     conn.close()
@@ -381,8 +456,6 @@ def auction(id):
         bid_history=bid_history
     )
 
-
-# ── BID ──────────────────────────────────
 @app.route('/bid', methods=['POST'])
 def bid():
     if 'user_id' not in session:
@@ -390,7 +463,6 @@ def bid():
 
     conn = get_db()
     cursor = conn.cursor()
-
     auction_id = int(request.form['auction_id'])
     bid_amount = float(request.form['bid'])
     user_id    = session['user_id']
@@ -412,15 +484,11 @@ def bid():
         "UPDATE auctions SET current_bid=? WHERE id=?",
         (bid_amount, auction_id)
     ) 
-     # ── BUY NOW AUTO-SOLD CHECK ──────────────────────────
-    cursor.execute(
-        "SELECT buy_now_price, sold_mode FROM auctions WHERE id=?",
-        (auction_id,)
-    )
+    
+    cursor.execute("SELECT buy_now_price, sold_mode FROM auctions WHERE id=?", (auction_id,))
     row = cursor.fetchone()
     if row:
-        buy_now_price = row[0]
-        sold_mode     = row[1]
+        buy_now_price, sold_mode = row
         if buy_now_price and sold_mode == 'auto' and bid_amount >= buy_now_price:
             cursor.execute(
                 "UPDATE auctions SET status='sold', sold_to=? WHERE id=?",
@@ -430,7 +498,6 @@ def bid():
     conn.close()
 
     clear_bid_cache(user_id, auction_id)
-
     push_bid_to_feed(auction_id, {
         "user_id":     user_id,
         "bidder_name": session.get('user_name'),
@@ -444,24 +511,32 @@ def bid():
 @app.route('/buy')
 def buy_page():
     selected_cat = request.args.get('cat', 'All')
+    search_query = request.args.get('q', '') 
 
     conn = get_db()
     cursor = conn.cursor()
 
-    if selected_cat and selected_cat != "All":
-        cursor.execute("""
-            SELECT * FROM auctions
-            WHERE status = 'active'
-            AND LOWER(category) LIKE ?
-            ORDER BY id DESC
-        """, (selected_cat.lower() + '%',))
-    else:
-        cursor.execute("SELECT * FROM auctions WHERE status = 'active' ORDER BY id DESC")
+    query = "SELECT * FROM auctions WHERE status = 'active'"
+    params = []
 
+    if selected_cat and selected_cat != "All":
+        query += " AND LOWER(category) LIKE ?"
+        params.append(selected_cat.lower() + '%')
+
+    if search_query:
+        query += " AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ?)"
+        search_term = f"%{search_query.lower()}%"
+        params.extend([search_term, search_term])
+
+    query += " ORDER BY id DESC"
+
+    cursor.execute(query, tuple(params))
     auctions = [row_to_auction(row) for row in cursor.fetchall()]
     conn.close()
 
     return render_template('buy.html', auctions=auctions, current_category=selected_cat)
+
+
 # ── MARK AS SOLD ─────────────────────────
 @app.route('/mark_sold/<int:auction_id>/<int:winner_id>')
 def mark_sold(auction_id, winner_id):
@@ -470,11 +545,7 @@ def mark_sold(auction_id, winner_id):
  
     conn = get_db()
     cursor = conn.cursor()
- 
-    # Only the seller can mark as sold
-    cursor.execute(
-        "SELECT seller_id FROM auctions WHERE id=?", (auction_id,)
-    )
+    cursor.execute("SELECT seller_id FROM auctions WHERE id=?", (auction_id,))
     row = cursor.fetchone()
     if not row or row[0] != session['user_id']:
         conn.close()
@@ -489,98 +560,66 @@ def mark_sold(auction_id, winner_id):
     return redirect('/auction/' + str(auction_id))
 
 
-# ── WISHLIST — ADD ────────────────────────
+# ── WISHLIST ─────────────────────────────
 @app.route('/wishlist/<int:auction_id>')
 def add_to_wishlist(auction_id):
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT id FROM wishlist WHERE user_id=? AND auction_id=?",
-        (session['user_id'], auction_id)
-    )
+    cursor.execute("SELECT id FROM wishlist WHERE user_id=? AND auction_id=?", (session['user_id'], auction_id))
     if not cursor.fetchone():
-        cursor.execute(
-            "INSERT INTO wishlist (user_id, auction_id) VALUES (?, ?)",
-            (session['user_id'], auction_id)
-        )
+        cursor.execute("INSERT INTO wishlist (user_id, auction_id) VALUES (?, ?)", (session['user_id'], auction_id))
         conn.commit()
-
     conn.close()
     return redirect(request.referrer or '/')
 
-
-# ── WISHLIST — REMOVE ─────────────────────
 @app.route('/remove_wishlist/<int:auction_id>')
 def remove_from_wishlist(auction_id):
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     cursor = conn.cursor()
-
-    cursor.execute(
-        "DELETE FROM wishlist WHERE user_id=? AND auction_id=?",
-        (session['user_id'], auction_id)
-    )
+    cursor.execute("DELETE FROM wishlist WHERE user_id=? AND auction_id=?", (session['user_id'], auction_id))
     conn.commit()
     conn.close()
     return redirect(request.referrer or '/my_wishlist')
 
-
-# ── WISHLIST — VIEW ───────────────────────
 @app.route('/my_wishlist')
 def my_wishlist():
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     cursor = conn.cursor()
-
     cursor.execute("""
-        SELECT auctions.*
-        FROM wishlist
+        SELECT auctions.* FROM wishlist
         JOIN auctions ON wishlist.auction_id = auctions.id
         WHERE wishlist.user_id = ?
     """, (session['user_id'],))
-
     wishlist_items = cursor.fetchall()
     conn.close()
-
     return render_template('wishlist.html', wishlist_items=wishlist_items)
 
 
-# ── SUBMIT REVIEW ─────────────────────────
+# ── REVIEWS & NEWSLETTER ──────────────────
 @app.route('/submit_review', methods=['POST'])
 def submit_review():
     if 'user_id' not in session:
         return redirect('/login')
-
     stars   = request.form.get('stars')
     message = request.form.get('message')
-
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO reviews (user_id, stars, comment) VALUES (?, ?, ?)",
-        (session['user_id'], stars, message)
-    )
+    cursor.execute("INSERT INTO reviews (user_id, stars, comment) VALUES (?, ?, ?)", (session['user_id'], stars, message))
     conn.commit()
     conn.close()
-
     return redirect('/')
 
-
-# ── NEWSLETTER ────────────────────────────
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     email = request.form.get('email')
     if not email:
         return redirect('/')
-
     conn = get_db()
     cursor = conn.cursor()
     try:
@@ -590,39 +629,28 @@ def subscribe():
         print(f"Subscription error: {e}")
     finally:
         conn.close()
-
     return redirect('/')
 
 
-# ── DELETE BID ────────────────────────────
+# ── DELETIONS ─────────────────────────────
 @app.route('/delete_bid/<int:bid_id>')
 def delete_bid(bid_id):
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        "DELETE FROM bids WHERE id=? AND user_id=?",
-        (bid_id, session['user_id'])
-    )
+    cursor.execute("DELETE FROM bids WHERE id=? AND user_id=?", (bid_id, session['user_id']))
     conn.commit()
     conn.close()
     return redirect('/dashboard')
 
-
-# ── DELETE AUCTION ────────────────────────
 @app.route('/delete_auction/<int:id>')
 def delete_auction(id):
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        "DELETE FROM auctions WHERE id=? AND seller_id=?",
-        (id, session['user_id'])
-    )
+    cursor.execute("DELETE FROM auctions WHERE id=? AND seller_id=?", (id, session['user_id']))
     conn.commit()
     conn.close()
     return redirect('/')
@@ -633,7 +661,6 @@ def delete_auction(id):
 def logout():
     session.clear()
     return redirect('/')
-
 
 # ── RUN ───────────────────────────────
 if __name__ == "__main__":

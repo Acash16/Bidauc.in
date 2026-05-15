@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — Bidauc.in</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/Dashboard.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
 </head>
 <body>
 
@@ -14,6 +14,9 @@
   <a href="/" class="nav-logo">Bid<span>auc</span>.in</a>
   <div class="nav-links">
     <a href="/">Home</a>
+    <a href="#" onclick="toggleProfileForm(); return false;" class="nav-profile-icon" title="Edit Profile">
+    <img src="{{ url_for('static', filename='images/profile-icon.png') }}" alt="Profile Details">
+    </a>
     <a href="/create_auction" class="btn-create-nav">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Create Auction
@@ -21,6 +24,7 @@
     <a href="/logout">Logout</a>
   </div>
 </nav>
+
 
 <!-- ═══════════ PAGE ═══════════ -->
 <div class="page-wrapper">
@@ -36,6 +40,191 @@
       Create Auction
     </a>
   </div>
+{% set profile_complete = user[5] %}
+
+{% if profile_complete %}
+<div id="profile-view-mode" class="profile-card profile-view-box">
+    <div class="profile-view-left">
+
+        {% if user[12] %}
+            <img src="{{ url_for('static', filename='images/profiles/' + user[12]) }}" class="profile-img-sm">
+        {% else %}
+            <div class="profile-placeholder-sm">{{ user[1][0] }}</div>
+        {% endif %}
+
+        <div>
+            <h3 class="profile-heading-sm">
+                {{ user[1] }} {{ user[5] }}
+            </h3>
+
+            <p class="profile-address-text">
+                📍 {{ user[11] }}, {{ user[10] }} - {{ user[9] }}
+            </p>
+        </div>
+
+    </div>
+
+    <button onclick="toggleProfileForm()" class="btn-edit-profile">
+        Edit Profile
+    </button>
+</div>
+{% endif %}
+
+<div id="profile-edit-mode"
+     class="profile-card"
+     {% if profile_complete %}style="display:none;"{% endif %}>
+
+    <h2 class="profile-heading-lg">
+        {% if profile_complete %}
+            Update Profile Details
+        {% else %}
+            Complete Your Profile
+        {% endif %}
+    </h2>
+
+    <p class="profile-subtext">
+        Update your personal details, shipping address, and profile picture.
+    </p>
+
+    <form action="/update_profile"
+          method="POST"
+          enctype="multipart/form-data"
+          class="form-grid">
+
+        <div class="form-row profile-upload-row">
+
+            {% if user[12] %}
+                <img src="{{ url_for('static', filename='images/profiles/' + user[12]) }}"
+                     class="profile-img-lg">
+            {% else %}
+                <div class="profile-placeholder-lg">
+                    {{ user[1][0] }}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">Upload Profile Picture</label>
+
+                <input type="file"
+                       name="profile_pic"
+                       accept="image/*"
+                       class="form-input">
+            </div>
+
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group">
+                <label class="form-label">Surname</label>
+
+                <input type="text"
+                       name="surname"
+                       required
+                       value="{{ user[5] if user[5] else '' }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+
+                <input type="date"
+                       name="dob"
+                       required
+                       value="{{ user[6] if user[6] else '' }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Gender</label>
+
+                <select name="gender" class="form-input">
+
+                    <option value="Male"
+                    {% if user[7] == 'Male' %}selected{% endif %}>
+                    Male
+                    </option>
+
+                    <option value="Female"
+                    {% if user[7] == 'Female' %}selected{% endif %}>
+                    Female
+                    </option>
+
+                    <option value="Other"
+                    {% if user[7] == 'Other' %}selected{% endif %}>
+                    Other
+                    </option>
+
+                </select>
+            </div>
+
+        </div>
+
+        <div class="form-group">
+
+            <label class="form-label">Full Shipping Address</label>
+
+            <textarea name="address"
+                      required
+                      class="form-input">{{ user[8] if user[8] else '' }}</textarea>
+
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group">
+                <label class="form-label">Pincode</label>
+
+                <input type="text"
+                       id="pincode"
+                       name="pincode"
+                       required
+                       value="{{ user[9] if user[9] else '' }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">State</label>
+
+                <input type="text"
+                       id="state"
+                       name="state"
+                       required
+                       value="{{ user[10] if user[10] else '' }}"
+                       class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">City</label>
+
+                <input type="text"
+                       id="city"
+                       name="city"
+                       required
+                       value="{{ user[11] if user[11] else '' }}"
+                       class="form-input">
+            </div>
+
+        </div>
+
+        <div class="form-row">
+
+            <button type="submit" class="btn-save">
+                Save Profile Details
+            </button>
+
+            {% if profile_complete %}
+            <button type="button"
+                    onclick="toggleProfileForm()"
+                    class="btn-cancel">
+                Cancel
+            </button>
+            {% endif %}
+
+        </div>
+
+    </form>
+</div>
 
   <!-- ── Stats Row ── -->
   <div class="stats-row">
@@ -300,7 +489,7 @@
     </div>
   </div>
 
-</div><!-- /page-wrapper -->
-
+</div>
+<script src="{{ url_for('static', filename='script/dashboard.js') }}"></script>
 </body>
 </html>

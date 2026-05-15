@@ -558,7 +558,7 @@ body{
 .ticker-track {
   display: flex;
   gap: 40px;
-  animation: ticker 20s linear infinite;
+  animation: ticker 10s linear infinite;
   white-space: nowrap;
 }
 .ticker-track span b { color: #ffe082; }
@@ -1372,4 +1372,12 @@ body{
 
 html {
   scroll-behavior: smooth;
+}
+.btn-cancel{
+  background:#eee;
+  color:#111;
+  border:none;
+  padding:12px 24px;
+  border-radius:8px;
+  cursor:pointer;
 }
