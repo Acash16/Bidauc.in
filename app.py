@@ -31,10 +31,12 @@ start_scheduler(interval_seconds=60)
 
 # ── DATABASE FUNCTION ─────────────────────
 def get_db():
-    conn = sqlite3.connect('auction.db', timeout=10)
-    conn.execute("PRAGMA journal_mode=WAL")
-    return conn
+    db_path = "/tmp/auction.db"
 
+    conn = sqlite3.connect(db_path, timeout=10)
+    conn.execute("PRAGMA journal_mode=WAL")
+
+    return conn
 
 # ── CREATE TABLES ─────────────────────────
 def init_db():
