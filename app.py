@@ -386,7 +386,7 @@ def dashboard():
     conn.close()
 
     return render_template(
-        "dashboard.html",
+        "Dashboard.html",
         user=user_data,  # Passed for the profile form!
         auctions=auctions,
         bids=bids,
