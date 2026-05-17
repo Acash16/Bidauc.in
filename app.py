@@ -20,7 +20,7 @@ from algorithms import (
     get_live_feed,
 )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = Config.SECRET_KEY
 app.register_blueprint(auctions_bp, url_prefix="/api/auctions")
 bcrypt = Bcrypt(app)
