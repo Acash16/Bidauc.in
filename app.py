@@ -362,38 +362,88 @@ def update_profile():
 # ── DASHBOARD ─────────────────────────────
 @app.route('/dashboard')
 def dashboard():
+
     if 'user_id' not in session:
         return redirect('/login')
 
-    conn = get_db()
-    cursor = conn.cursor()
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
 
-    # Get FULL User Data for the Profile Form
-    cursor.execute("SELECT * FROM users WHERE id=?", (session['user_id'],))
-    user_data = cursor.fetchone()
+        # USER DATA
+        cursor.execute(
+            "SELECT * FROM users WHERE id=?",
+            (session['user_id'],)
+        )
+        user_data = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM auctions WHERE seller_id = ? ORDER BY id DESC", (session['user_id'],))
-    auctions = cursor.fetchall()
+        # SAFE fallback if user missing
+        if not user_data:
+            session.clear()
+            return redirect('/login')
 
-    cursor.execute("""
-        SELECT bids.id, bids.auction_id, bids.user_id, bids.bid_amount, auctions.title
-        FROM bids
-        JOIN auctions ON bids.auction_id = auctions.id
-        WHERE bids.user_id = ?
-        ORDER BY bids.id DESC
-    """, (session['user_id'],))
-    bids = cursor.fetchall()
-    conn.close()
+        # AUCTIONS
+        cursor.execute(
+            """
+            SELECT * FROM auctions
+            WHERE seller_id = ?
+            ORDER BY id DESC
+            """,
+            (session['user_id'],)
+        )
+        auctions = cursor.fetchall()
 
-    return render_template(
-        "dashboard.html",
-        user=user_data,  # Passed for the profile form!
-        auctions=auctions,
-        bids=bids,
-        cheapest_biddable=get_cheapest_biddable(session['user_id'])
-    )
+        # BIDS
+        cursor.execute("""
+            SELECT bids.id,
+                   bids.auction_id,
+                   bids.user_id,
+                   bids.bid_amount,
+                   auctions.title
 
+            FROM bids
 
+            JOIN auctions
+            ON bids.auction_id = auctions.id
+
+            WHERE bids.user_id = ?
+
+            ORDER BY bids.id DESC
+        """, (session['user_id'],))
+
+        bids = cursor.fetchall()
+
+        # SAFE algorithm handling
+        try:
+            cheapest_biddable = get_cheapest_biddable(
+                session['user_id']
+            )
+
+            if cheapest_biddable is None:
+                cheapest_biddable = []
+
+        except Exception as algo_error:
+            print("Cheapest Biddable Error:", algo_error)
+            cheapest_biddable = []
+
+        conn.close()
+
+        return render_template(
+            "dashboard.html",
+            user=user_data,
+            auctions=auctions,
+            bids=bids,
+            cheapest_biddable=cheapest_biddable
+        )
+
+    except Exception as e:
+
+        print("Dashboard Error:", e)
+
+        return render_template(
+            "error.html",
+            message="Dashboard failed to load."
+        )
 # ── CREATE AUCTION ───────────────────────
 @app.route('/create_auction', methods=['GET', 'POST'])
 def create_auction():
