@@ -1,0 +1,5 @@
+**pycache**/
+venv/
+auction_backup/
+sqlite3
+.vscode/
