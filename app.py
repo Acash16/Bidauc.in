@@ -139,17 +139,16 @@ def row_to_auction(row):
         "title":         row[1],
         "description":   row[2],
         "image":         row[3],
-        "start_price":   float(row[4]) if row[4] else 0.0,
-        "current_bid":   float(row[5]) if row[5] else (float(row[4]) if row[4] else 0.0),
-        "end_time":      row[6],
-        "seller_id":     row[7],
-        "status":        row[8] or "active",
-        "category":      row[9] if len(row) > 9 and row[9] else "General",
+        "category":      row[4] if row[4] else "General",
+        "start_price":   float(row[5]) if row[5] else 0.0,
+        "current_bid":   float(row[6]) if row[6] else (float(row[5]) if row[5] else 0.0),
+        "end_time":      row[7],
+        "seller_id":     row[8],
+        "status":        row[9] or "active",
         "buy_now_price": float(row[10]) if len(row) > 10 and row[10] else None,
         "sold_mode":     row[11] if len(row) > 11 and row[11] else "manual",
         "sold_to":       row[12] if len(row) > 12 else None,
     }
-
 # ── EXPIRE AUCTIONS ───────────────────────
 def expire_auctions():
     conn = None
